@@ -20,11 +20,25 @@ sam build --use-container
 
 ## Deploy
 
-Run the following command the first time the function is deployed.
+## Upload swagger file to accessible S3 bucket
+
+The swagger file that contains the API definition will need to be uploaded to a S3 bucket.
+
+```bash
+aws s3 cp src/apigateway/swagger.yml s3://some_bucket_you_own
+```
+
+Make note that you'll need to provide the S3 bucket when deploying the application stack.
+
+## Deploy the serverless application
+
+Run the following command the first time the application is deployed.
 
 ```bash
 sam deploy --guided
 ```
+
+You will be prompted to enter the S3 bucket from the previous step.  
 
 Save the outputs to the file `samconfig.toml`.  Subsequent runs will take advantage of the values stored in the configuration file.
 
