@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  api-gw-swagger
+
+  SAM Template for defining a API Gateway+Lambda app with Swagger
+
+Parameters:  
+  S3BucketName:
+    Type: String
+    Default: asap_sandbox
+
+Resources:
+  GetPetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/lambda/get_pet
+      Handler: index.handler
+      Runtime: python3.8
+      Policies:
+        - AWSLambdaBasicExecutionRole
+    Events:
+      GetPet:
+        Type: Api
+        Properties:
+          RestApiId: !Ref ApiEndpoint
+          Method: get
+          Path: /pet
+  
+  GetPetFunctionPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn: GetPetFunction
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetPetFunction
+      Principal: apigateway.amazonaws.com
+  
+  PostPetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/lambda/get_pet
+      Handler: index.handler
+      Runtime: python3.8
+      Policies:
+        - AWSLambdaBasicExecutionRole
+    Events:
+      PostPet:
+        Type: Api
+        Properties:
+          RestApiId: !Ref ApiEndpoint
+          Method: post
+          Path: /pet
+
+  PostPetFunctionPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn: PostPetFunction
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PostPetFunction
+      Principal: apigateway.amazonaws.com
+
+  ApiEndpoint:
+    Type: AWS::Serverless::Api
+    Properties:
+        StageName: Prod
+        DefinitionBody: 
+          'Fn::Transform':
+            Name: 'AWS::Include'
+            Parameters:
+              Location: !Sub "s3://${S3BucketName}/swagger.yml"
+
+Outputs:
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  Api:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ApiEndpoint}.execute-api.${AWS::Region}.amazonaws.com/Prod/pet"
